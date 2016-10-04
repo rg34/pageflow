@@ -17,7 +17,7 @@ module Pageflow
         li do
           span(user_initials(user), :class => 'initials')
           div :class => 'tooltip' do
-            link_to(user.full_name, admin_user_path(user))
+            link_to(user.full_name, send("admin_#{Pageflow.config.user_class.underscore}_path", user))
           end
         end
       end

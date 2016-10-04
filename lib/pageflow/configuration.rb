@@ -1,6 +1,16 @@
 module Pageflow
   # Options to be defined in the pageflow initializer of the main app.
   class Configuration
+    # User Configuration
+    # The name of the class your app uses for your users.
+    # If you would like to use the AdminUser class from ActiveAdmin, change this to 'AdminUser'.
+    # Default is User
+    attr_accessor :user_class
+
+    # Path where Pageflow will be mounted
+    # Default is '/'
+    attr_accessor :mount_point
+
     # Default options for paperclip attachments which are supposed to
     # use filesystem storage.
     attr_accessor :paperclip_filesystem_default_options

@@ -30,7 +30,7 @@ module Pageflow
         EncodingConfirmation.new(entry,
                                  encoding_confirmation_params,
                                  encoding_quota,
-                                 current_user)
+                                 current_pageflow_user)
       end
 
       def encoding_confirmation_params
@@ -38,7 +38,7 @@ module Pageflow
       end
 
       def encoding_quota
-        Pageflow.config.quotas.get(:encoding, current_user.account)
+        Pageflow.config.quotas.get(:encoding, current_pageflow_user.account)
       end
     end
   end

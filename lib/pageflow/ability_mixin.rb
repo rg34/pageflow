@@ -3,7 +3,7 @@ module Pageflow
   module AbilityMixin
     # Call this in the ability initializer.
     def pageflow_default_abilities(user)
-      return if user.nil?
+      return if user.nil? or user.class.name != Pageflow.config.user_class
 
       can :read, Folder, :id => user.entries.map(&:folder_id)
 

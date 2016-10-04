@@ -24,7 +24,7 @@ pageflow.Storyline = Backbone.Model.extend({
   },
 
   urlRoot: function() {
-    return this.isNew() ? this.collection.url() : '/storylines';
+    return this.isNew() ? this.collection.url() : "<%= Pageflow.config.mount_point %>/storylines";
   },
 
   displayTitle: function() {

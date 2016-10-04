@@ -21,7 +21,7 @@ module Pageflow
     class HeldByOtherSessionError < Error; end
     class NotHeldError < Error; end
 
-    belongs_to :user
+    belongs_to :user, class_name: Pageflow.config.user_class, foreign_key: :user_id
     belongs_to :entry, :inverse_of => :edit_lock
 
     def held_by?(user)
@@ -36,24 +36,24 @@ module Pageflow
       Time.now > self.updated_at + TIME_TO_LIVE
     end
 
-    def acquire(current_user, options = {})
-      verify!(current_user, options)
+    def acquire(current_pageflow_user, options = {})
+      verify!(current_pageflow_user, options)
     rescue Error
       if options[:force] || timed_out?
-        entry.create_edit_lock(:user => current_user)
+        entry.create_edit_lock(:user => current_pageflow_user)
       else
         raise
       end
     end
 
-    def release(current_user)
-      if user == current_user
+    def release(current_pageflow_user)
+      if user == current_pageflow_user
         destroy
       end
     end
 
-    def verify!(current_user, options)
-      raise HeldByOtherUserError.new(user) unless held_by?(current_user)
+    def verify!(current_pageflow_user, options)
+      raise HeldByOtherUserError.new(user) unless held_by?(current_pageflow_user)
       raise HeldByOtherSessionError unless matches?(options[:id])
       touch
     end

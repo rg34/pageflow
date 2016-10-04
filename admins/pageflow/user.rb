@@ -99,7 +99,7 @@ module Pageflow
     end
 
     action_item(:toggle_suspended, only: :show) do
-      if user != current_user
+      if user != current_pageflow_user
         if user.suspended?
           link_to I18n.t('pageflow.admin.users.unsuspend'), unsuspend_admin_user_path(user), :method => :post, :data => {:rel => 'unsuspend_user'}
         else
@@ -109,7 +109,7 @@ module Pageflow
     end
 
     action_item(:delete, only: :show) do
-      if user != current_user
+      if user != current_pageflow_user
         link_to I18n.t('pageflow.admin.users.delete'), admin_user_path(user), :method => :delete, :data => {:rel => 'delete_user', :confirm => I18n.t('pageflow.admin.users.confirm_delete')}
       end
     end
@@ -118,8 +118,8 @@ module Pageflow
 
     collection_action 'me', :title => I18n.t('pageflow.admin.users.account'), :method => [:get, :patch] do
       if request.patch?
-        if current_user.update_with_password(user_profile_params)
-          sign_in current_user, :bypass => true
+        if current_pageflow_user.update_with_password(user_profile_params)
+          sign_in current_pageflow_user, :bypass => true
           redirect_to admin_root_path, :notice => I18n.t('pageflow.admin.users.me.updated')
         end
       end
@@ -127,8 +127,8 @@ module Pageflow
 
     collection_action 'delete_me', :title => I18n.t('pageflow.admin.users.account'), :method => [:get, :delete] do
       if request.delete?
-        if authorized?(:delete_own_user, current_user) &&
-           current_user.destroy_with_password(params.require(:user)[:current_password])
+        if authorized?(:delete_own_user, current_pageflow_user) &&
+           current_pageflow_user.destroy_with_password(params.require(:user)[:current_password])
           redirect_to admin_root_path, :notice => I18n.t('pageflow.admin.users.me.updated')
         end
       end
@@ -159,7 +159,7 @@ module Pageflow
 
       def build_new_resource
         user = InvitedUser.new(permitted_params[:user])
-        user.account ||= current_user.account
+        user.account ||= current_pageflow_user.account
         user
       end
 

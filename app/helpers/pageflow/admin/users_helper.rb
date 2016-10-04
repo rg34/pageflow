@@ -6,7 +6,7 @@ module Pageflow
       end
 
       def delete_own_user_section
-        user_deletion_permission = Pageflow.config.authorize_user_deletion.call(current_user)
+        user_deletion_permission = Pageflow.config.authorize_user_deletion.call(current_pageflow_user)
         if user_deletion_permission == true
           render('pageflow/admin/users/may_delete')
         else

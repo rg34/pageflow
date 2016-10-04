@@ -7,21 +7,21 @@ module Pageflow
     def create
       entry = Entry.find(params[:entry_id])
       authorize!(:edit, entry)
-      entry.edit_lock.acquire(current_user, edit_lock_params)
-      entry.snapshot(:creator => current_user)
+      entry.edit_lock.acquire(current_pageflow_user, edit_lock_params)
+      entry.snapshot(:creator => current_pageflow_user)
       respond_with(entry.reload.edit_lock, :location => entry_edit_lock_url(entry))
     end
 
     def update
       entry = Entry.find(params[:entry_id])
       authorize!(:edit, entry)
-      entry.edit_lock.acquire(current_user, edit_lock_params)
+      entry.edit_lock.acquire(current_pageflow_user, edit_lock_params)
       head :no_content
     end
 
     def destroy
       entry = Entry.find(params[:entry_id])
-      entry.edit_lock.release(current_user)
+      entry.edit_lock.release(current_pageflow_user)
       head :no_content
     end
 

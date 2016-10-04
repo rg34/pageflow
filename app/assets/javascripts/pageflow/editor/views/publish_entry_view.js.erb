@@ -67,7 +67,7 @@ pageflow.PublishEntryView = Backbone.Marionette.ItemView.extend({
     this.$el.toggleClass('files_pending', this.model.get('uploading_files_count') > 0 || this.model.get('pending_files_count') > 0);
     this.$el.toggleClass('published', this.model.get('published'));
 
-    this.ui.revisionsLink.attr('href', '/admin/entries/' + this.model.id);
+    this.ui.revisionsLink.attr('href', "/admin/<%= Pageflow.config.mount_point %>/entries/" + this.model.id);
     this.ui.successLink.attr('href', this.model.get('pretty_url'));
     this.ui.successLink.text(this.model.get('pretty_url'));
 

@@ -6,7 +6,7 @@ pageflow.StorylinesCollection = Backbone.Collection.extend({
   model: pageflow.Storyline,
 
   url: function() {
-    return '/entries/' + pageflow.entry.get('id') + '/storylines';
+    return "<%= Pageflow.config.mount_point %>/entries/" + pageflow.entry.get('id') + '/storylines';
   },
 
   initialize: function() {

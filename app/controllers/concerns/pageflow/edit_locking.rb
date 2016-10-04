@@ -32,7 +32,7 @@ module Pageflow
     protected
 
     def verify_edit_lock!(entry)
-      entry.edit_lock.verify!(current_user, :id => request.headers['X-Edit-Lock'])
+      entry.edit_lock.verify!(current_pageflow_user, :id => request.headers['X-Edit-Lock'])
     end
   end
 end

@@ -7,7 +7,7 @@ module Pageflow
   def self.routes(router)
     router.instance_eval do
       namespace :admin do
-        resources :users do
+        resources Pageflow.config.user_class.underscore.pluralize.to_sym do
           resources :memberships
         end
 
@@ -16,13 +16,13 @@ module Pageflow
         end
       end
 
-      mount Pageflow::Engine, at: '/'
+      mount Pageflow::Engine, at: Pageflow.config.mount_point
     end
   end
 
   def self.active_admin_settings(config)
     config.before_filter do
-      I18n.locale = current_user.try(:locale) || http_accept_language.compatible_language_from(I18n.available_locales) || I18n.default_locale
+      I18n.locale = current_pageflow_user.try(:locale) || http_accept_language.compatible_language_from(I18n.available_locales) || I18n.default_locale
     end
   end
 

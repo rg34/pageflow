@@ -21,7 +21,7 @@ module Pageflow
     controller do
       def build_new_resource
         super.tap do |folder|
-          folder.account ||= current_user.account
+          folder.account ||= current_pageflow_user.account
         end
       end
 

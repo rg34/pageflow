@@ -5,9 +5,9 @@ module Pageflow
         embedded_index_table(entry.memberships.includes(:user).references(:users),
                              blank_slate_text: I18n.t('pageflow.admin.entries.no_members')) do
           table_for_collection class: 'memberships', sortable: true, i18n: Pageflow::Membership do
-            column :user, sortable: 'users.last_name', class: 'name' do |membership|
+            column :user, sortable: "#{Pageflow.config.user_class.underscore.pluralize}.last_name", class: 'name' do |membership|
               if authorized? :manage, User
-                link_to(membership.user.formal_name, admin_user_path(membership.user),
+                link_to(membership.user.formal_name, send("admin_#{Pageflow.config.user_class.underscore}_path", membership.user),
                         class: 'view_creator')
               else
                 membership.user.full_name

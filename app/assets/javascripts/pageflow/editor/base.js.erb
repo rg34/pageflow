@@ -64,7 +64,7 @@ pageflow.editor = new pageflow.EditorApi();
 pageflow.startEditor = function(options) {
   jQuery(function() {
     $.when(
-      $.getJSON('/editor/entries/' + options.entryId + '/seed'),
+      $.getJSON("<%= Pageflow.config.mount_point %>/editor/entries/" + options.entryId + '/seed'),
       pageflow.browser.detectFeatures()
     )
       .done(function(result) {

@@ -35,7 +35,7 @@ module Pageflow
         EntryPublication.new(entry,
                              entry_publication_params,
                              published_entries_quota,
-                             current_user)
+                             current_pageflow_user)
       end
 
       def entry_publication_params
@@ -43,7 +43,7 @@ module Pageflow
       end
 
       def published_entries_quota
-        Pageflow.config.quotas.get(:published_entries, current_user.account)
+        Pageflow.config.quotas.get(:published_entries, current_pageflow_user.account)
       end
     end
   end

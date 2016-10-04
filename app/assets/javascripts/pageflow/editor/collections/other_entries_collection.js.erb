@@ -1,6 +1,6 @@
 pageflow.OtherEntriesCollection = Backbone.Collection.extend({
   model: pageflow.OtherEntry,
-  url: '/editor/entries',
+  url: "<%= Pageflow.config.mount_point %>/editor/entries",
 
   initialize: function(models, options) {
     options = options || {};

@@ -35,6 +35,6 @@ pageflow.EntryPublication = Backbone.Model.extend({
   },
 
   url: function() {
-    return '/editor/entries/' + pageflow.entry.get('id') + '/entry_publications';
+    return "<%= Pageflow.config.mount_point %>/editor/entries/" + pageflow.entry.get('id') + '/entry_publications';
   }
 });

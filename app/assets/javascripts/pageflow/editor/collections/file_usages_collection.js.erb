@@ -9,7 +9,7 @@ pageflow.FileUsagesCollection = Backbone.Collection.extend({
   },
 
   url: function() {
-    return '/editor/entries/' + this.entry.get('id') + '/file_usages';
+    return "<%= Pageflow.config.mount_point %>/editor/entries/" + this.entry.get('id') + '/file_usages';
   },
 
   createForFile: function(file, options) {

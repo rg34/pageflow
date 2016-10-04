@@ -38,7 +38,7 @@ jQuery(function($) {
           var entryId = $(ui.draggable).attr('id').replace('pageflow_entry_', '');
 
           $.ajax({
-            url: '/admin/entries/' + entryId,
+            url: "<%= Pageflow.config.mount_point %>/admin/entries/" + entryId,
             method: 'put',
             dataType: 'json',
             data: {

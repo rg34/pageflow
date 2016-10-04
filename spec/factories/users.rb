@@ -4,7 +4,7 @@ module Pageflow
       "person#{n}@example.com"
     end
 
-    factory :user do
+    factory :pageflow_user do
       email
       first_name 'John'
       last_name 'Doe'

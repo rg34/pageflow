@@ -20,7 +20,7 @@ module Pageflow
     # Place a user user profile button next to the sign out link.
     admin.build_menu :utility_navigation do |menu|
       menu.add(:label => proc { display_name current_active_admin_user },
-               :id => 'current_user',
+               :id => 'current_pageflow_user',
                :if => proc { current_active_admin_user? },
                :url => '/admin/users/me')
       admin.add_logout_button_to_menu(menu)

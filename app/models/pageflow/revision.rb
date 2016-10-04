@@ -7,7 +7,7 @@ module Pageflow
     ].join(',')
 
     belongs_to :entry, touch: :edited_at
-    belongs_to :creator, :class_name => 'User'
+    belongs_to :creator, :class_name => Pageflow.config.user_class
     belongs_to :restored_from, :class_name => 'Pageflow::Revision'
 
     has_many :widgets, :as => :subject

@@ -10,7 +10,7 @@ pageflow.widgetSubject = {
   },
 
   widgetsUrlRoot: function() {
-    return '/editor/subjects/' + this.collectionName + '/' + this.id;
+    return "<%= Pageflow.config.mount_point %>/editor/subjects/" + this.collectionName + '/' + this.id;
   },
 
   fetchWidgets: function() {
@@ -21,7 +21,7 @@ pageflow.widgetSubject = {
     var model = this;
 
     return Backbone.sync('patch', model, _.extend(options || {}, {
-      url: this.widgetsUrlRoot() + '/widgets/batch',
+      url: this.widgetsUrlRoot() + "/widgets/batch",
 
       attrs: {
         widgets: model.widgets.map(function(widget) {

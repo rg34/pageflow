@@ -54,7 +54,7 @@ module Pageflow
 
       authorize!(:destroy, chapter)
       verify_edit_lock!(chapter.entry)
-      chapter.entry.snapshot(creator: current_user)
+      chapter.entry.snapshot(creator: current_pageflow_user)
 
       chapter.destroy
 

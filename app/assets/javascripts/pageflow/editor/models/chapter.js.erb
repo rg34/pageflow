@@ -26,7 +26,7 @@ pageflow.Chapter = Backbone.Model.extend({
   },
 
   urlRoot: function() {
-    return this.isNew() ? this.collection.url() : '/chapters';
+    return this.isNew() ? this.collection.url() : "<%= Pageflow.config.mount_point %>/chapters";
   },
 
   storylinePosition: function() {

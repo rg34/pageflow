@@ -54,7 +54,7 @@ module Pageflow
 
     sidebar :folders, :only => :index do
       text_node(link_to(I18n.t('pageflow.admin.entries.add_folder'), new_admin_folder_path, :class => 'new'))
-      grouped_folder_list(Folder.includes(:account).accessible_by(Ability.new(current_user), :read),
+      grouped_folder_list(Folder.includes(:account).accessible_by(Ability.new(current_pageflow_user), :read),
                           :class => authorized?(:manage, Folder) ? 'editable' : nil,
                           :active_id => params[:folder_id],
                           :grouped_by_accounts => authorized?(:read, Account))
@@ -115,7 +115,7 @@ module Pageflow
     member_action :snapshot, :method => :post do
       entry = Entry.find(params[:id])
       authorize!(:snapshot, entry)
-      entry.snapshot(:creator => current_user, :type => 'user')
+      entry.snapshot(:creator => current_pageflow_user, :type => Pageflow.config.user_class.underscore) #TODO check this!!
       redirect_to(admin_entry_path(entry))
     end
 
@@ -142,9 +142,10 @@ module Pageflow
       helper Pageflow::Admin::FeaturesHelper
       helper Pageflow::Admin::RevisionsHelper
       helper Pageflow::Admin::FormHelper
+      helper Pageflow::Admin::AdminUsersHelper
 
       after_build do |entry|
-        entry.account ||= current_user.account
+        entry.account ||= current_pageflow_user.account
         entry.theming ||= entry.account.default_theming
       end
 
@@ -174,7 +175,7 @@ module Pageflow
       def permitted_attributes
         result = [:title]
 
-        target = params[:id] ? resource : current_user.account
+        target = params[:id] ? resource : current_pageflow_user.account
         result += Pageflow.config_for(target).admin_form_inputs.permitted_attributes_for(:entry)
 
         result += [:account_id, :theming_id] if authorized?(:read, Account)

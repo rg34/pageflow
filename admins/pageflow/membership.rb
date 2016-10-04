@@ -8,7 +8,7 @@ module Pageflow
 
     controller do
       belongs_to :entry, :parent_class => Pageflow::Entry, :polymorphic => true
-      belongs_to :user, :parent_class => User, :polymorphic => true
+      belongs_to :user, :parent_class => Pageflow.config.user_class, :polymorphic => true, class_name: Pageflow.config.user_class
 
       helper Pageflow::Admin::MembershipsHelper
       helper Pageflow::Admin::FormHelper

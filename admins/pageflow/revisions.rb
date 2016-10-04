@@ -11,9 +11,9 @@ module Pageflow
       entry = revision.entry
       authorize!(:restore, entry)
 
-      entry.edit_lock.acquire(current_user)
-      revision.entry.restore(:revision => revision, :creator => current_user)
-      entry.edit_lock.release(current_user)
+      entry.edit_lock.acquire(current_pageflow_user)
+      revision.entry.restore(:revision => revision, :creator => current_pageflow_user)
+      entry.edit_lock.release(current_pageflow_user)
 
       redirect_to(admin_entry_path(entry, :notice => I18n.t('pageflow.admin.revisions.restored')))
     end
