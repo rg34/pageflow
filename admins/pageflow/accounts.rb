@@ -12,7 +12,7 @@ module Pageflow
         account.entries_count
       end
       column :users_count do |account|
-        account.users_count
+        account.send("#{Pageflow.config.user_class.underscore.pluralize}_count")
       end
       column :default_theming do |account|
         account.default_theming.theme_name
@@ -36,7 +36,7 @@ module Pageflow
       helper Pageflow::Admin::FeaturesHelper
       helper Pageflow::Admin::WidgetsHelper
       helper Pageflow::Admin::FormHelper
-      helper ThemesHelper
+      helper Pageflow::ThemesHelper
 
       def new
         @account = Account.new
