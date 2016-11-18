@@ -189,6 +189,10 @@ module Pageflow
           attributes.merge!(feature_states: feature_states || {})
         end
       end
+
+      def current_pageflow_user
+        send("current_#{Pageflow.config.user_class.underscore}") || NullUser.new
+      end
     end
   end
 end
