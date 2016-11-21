@@ -9,9 +9,12 @@ require 'cancan'
 require 'jbuilder'
 require 'htmlentities'
 require 'kramdown'
+require 'rubygems'
 
 require 'resque_mailer'
-require 'resque_scheduler'
+
+require 'resque/scheduler'
+
 
 require 'active_admin'
 

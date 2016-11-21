@@ -1,5 +1,5 @@
 module Pageflow
-  ActiveAdmin.register User do
+  ActiveAdmin.register Pageflow.config.user_class.constantize do
     menu :priority => 2
 
     config.batch_actions = false
@@ -7,12 +7,17 @@ module Pageflow
 
     index do
       column :full_name, :sortable => 'last_name' do |user|
-        link_to(user.full_name, admin_user_path(user))
+        link_to(user.full_name, send("admin_#{Pageflow.config.user_class.underscore}_path", user))
       end
       column :email
       if authorized?(:read, Account)
         column :account, :sortable => 'account_id' do |user|
-          link_to(user.account.name, admin_account_path(user.account))
+          if user.account && admin_account_path(user.account)
+            link_to(user.account.try(:name), admin_account_path(user.account))
+          else
+            user.account.try(:name).present? ? user.account.name : 'Unknown'
+          end
+
         end
       end
       column :role, :sortable => 'role' do |user|
@@ -27,9 +32,10 @@ module Pageflow
     filter :first_name
     filter :email
 
-    action_item(:invite, only: :index) do
-      link_to I18n.t('pageflow.admin.users.invite_user'), new_admin_user_path, :data => {:rel => 'invite_user'}
-    end
+    # FIXME: this method is currently not finding the current_pageflow_user, commenting out for now as we don't really need it
+    # action_item(:invite, only: :index) do
+    #   link_to I18n.t('pageflow.admin.users.invite_user'), send("new_admin_#{Pageflow.config.user_class.underscore}_path", current_pageflow_user), :data => {:rel => 'invite_user'}
+    # end
 
     show do |user|
       div :class => :columns do
@@ -56,7 +62,7 @@ module Pageflow
           end
 
           para do
-            link_to I18n.t('pageflow.admin.users.resend_invitation'), resend_invitation_admin_user_path(user), :method => :post, :class => 'button', :data => {:rel => 'resend_invitation'}
+            link_to I18n.t('pageflow.admin.users.resend_invitation'), send("resend_invitation_admin_#{Pageflow.config.user_class.underscore}_path", user), :method => :post, :class => 'button', :data => {:rel => 'resend_invitation'}
           end
         end
 
@@ -71,7 +77,7 @@ module Pageflow
               column do |membership|
                 if authorized?(:destroy, membership)
                   link_to(I18n.t('pageflow.admin.users.delete'),
-                          admin_user_membership_path(user, membership),
+                          send("admin_#{Pageflow.config.user_class.underscore}_membership_path", user, membership),
                           method: :delete,
                           data: {
                             confirm: I18n.t('active_admin.delete_confirmation'),
@@ -84,7 +90,7 @@ module Pageflow
 
           span do
             link_to(I18n.t('pageflow.admin.users.add_entry'),
-                    new_admin_user_membership_path(user),
+                    send("new_admin_#{Pageflow.config.user_class.underscore}_membership_path", user),
                     class: 'button',
                     data: {
                       rel: 'add_membership'
@@ -95,22 +101,22 @@ module Pageflow
     end
 
     action_item(:edit, only: :show) do
-      link_to I18n.t('pageflow.admin.users.edit'), edit_admin_user_path(user), :data => {:rel => 'edit_user'}
+      link_to I18n.t('pageflow.admin.users.edit'), send("edit_admin_#{Pageflow.config.user_class.underscore}_path", resource), :data => {:rel => 'edit_user'}
     end
 
     action_item(:toggle_suspended, only: :show) do
-      if user != current_pageflow_user
-        if user.suspended?
-          link_to I18n.t('pageflow.admin.users.unsuspend'), unsuspend_admin_user_path(user), :method => :post, :data => {:rel => 'unsuspend_user'}
+      if resource != current_user
+        if resource.suspended?
+          link_to I18n.t('pageflow.admin.users.unsuspend'), send("unsuspend_admin_#{Pageflow.config.user_class.underscore}_path", resource), :method => :post, :data => {:rel => 'unsuspend_user'}
         else
-          link_to I18n.t('pageflow.admin.users.suspend'), suspend_admin_user_path(user), :method => :post, :data => {:rel => 'suspend_user'}
+          link_to I18n.t('pageflow.admin.users.suspend'), send("suspend_admin_#{Pageflow.config.user_class.underscore}_path", resource), :method => :post, :data => {:rel => 'suspend_user'}
         end
       end
     end
 
     action_item(:delete, only: :show) do
-      if user != current_pageflow_user
-        link_to I18n.t('pageflow.admin.users.delete'), admin_user_path(user), :method => :delete, :data => {:rel => 'delete_user', :confirm => I18n.t('pageflow.admin.users.confirm_delete')}
+      if resource != current_user
+        link_to I18n.t('pageflow.admin.users.delete'), send("admin_#{Pageflow.config.user_class.underscore}_path", resource), :method => :delete, :data => {:rel => 'delete_user', :confirm => I18n.t('pageflow.admin.users.confirm_delete')}
       end
     end
 
@@ -118,7 +124,7 @@ module Pageflow
 
     collection_action 'me', :title => I18n.t('pageflow.admin.users.account'), :method => [:get, :patch] do
       if request.patch?
-        if current_pageflow_user.update_with_password(user_profile_params)
+        if current_user.update_with_password(user_profile_params)
           sign_in current_pageflow_user, :bypass => true
           redirect_to admin_root_path, :notice => I18n.t('pageflow.admin.users.me.updated')
         end
@@ -128,7 +134,7 @@ module Pageflow
     collection_action 'delete_me', :title => I18n.t('pageflow.admin.users.account'), :method => [:get, :delete] do
       if request.delete?
         if authorized?(:delete_own_user, current_pageflow_user) &&
-           current_pageflow_user.destroy_with_password(params.require(:user)[:current_password])
+           current_user.destroy_with_password(params.require(:user)[:current_password])
           redirect_to admin_root_path, :notice => I18n.t('pageflow.admin.users.me.updated')
         end
       end

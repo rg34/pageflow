@@ -24,10 +24,10 @@ Gem::Specification.new do |s|
   s.add_dependency 'devise', '~> 3.5'
 
   # Resque jobs and queues
-  s.add_dependency 'resque', '~> 1.25'
-  s.add_dependency 'resque-scheduler', '~> 2.5'
-  s.add_dependency 'resque-logger', '~> 0.2.0'
-  s.add_dependency 'resque_mailer', '~> 2.2'
+  s.add_dependency 'resque', '>= 1.25'
+  s.add_dependency 'resque-scheduler', '>= 2.5'
+  s.add_dependency 'resque-logger', '>= 0.2.0'
+  s.add_dependency 'resque_mailer', '>= 2.2'
   s.add_dependency 'ar_after_transaction', '~> 0.4.0'
   s.add_dependency 'redis', '~> 3.0'
   s.add_dependency 'redis-namespace', '~> 1.5'

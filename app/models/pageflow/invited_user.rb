@@ -1,7 +1,7 @@
 module Pageflow
   # Specialized User class containing invitation logic used by in the
   # users admin.
-  class InvitedUser < User
+  class InvitedUser < Pageflow.config.user_class.constantize
     before_create :prepare_invitation
     after_create :send_invitation
 
