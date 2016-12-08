@@ -32,6 +32,10 @@ module Pageflow
     do_not_validate_attachment_file_type(:poster)
     do_not_validate_attachment_file_type(:thumbnail)
 
+    after_initialize do
+      self.state ||= 'not_uploaded_to_s3'
+    end
+
     def thumbnail_url(*args)
       poster.url(*args)
     end

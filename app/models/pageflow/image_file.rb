@@ -36,6 +36,10 @@ module Pageflow
 
     after_unprocessed_attachment_post_process :save_image_dimensions
 
+    after_initialize do
+      self.state ||= 'not_processed'
+    end
+
     def attachment
       processed_attachment.present? ? processed_attachment : unprocessed_attachment
     end
