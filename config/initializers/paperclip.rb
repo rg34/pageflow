@@ -29,7 +29,7 @@ Pageflow.configure do |config|
 
   config.paperclip_filesystem_default_options.merge!({
     :storage => :filesystem,
-    :path => ':pageflow_filesystem_root/:class/:attachment/:id_partition/:style/:filename',
+    :path => "#{config.paperclip_filesystem_root}/:class/:attachment/:id_partition/:style/:filename",
     :url => 'not_uploaded_yet'
   })
 
