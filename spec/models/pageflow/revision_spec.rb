@@ -225,14 +225,14 @@ module Pageflow
       end
     end
 
-    describe '#files' do
+    describe '#find_files' do
       it 'returns files of given type' do
         entry = create(:entry)
         revision = entry.draft
         image_file = create(:image_file)
         revision.image_files << image_file
 
-        result = revision.files(Pageflow::ImageFile)
+        result = revision.find_files(Pageflow::ImageFile)
 
         expect(result).to eq([image_file])
       end
@@ -243,7 +243,7 @@ module Pageflow
         image_file = create(:image_file)
         revision.image_files << image_file
 
-        result = revision.files(Pageflow::VideoFile)
+        result = revision.find_files(Pageflow::VideoFile)
 
         expect(result).to eq([])
       end
@@ -254,7 +254,7 @@ module Pageflow
         image_file = create(:image_file)
         revision.image_files << image_file
 
-        result = revision.files(Pageflow::ImageFile)
+        result = revision.find_files(Pageflow::ImageFile)
 
         expect(result.first.usage_id).to be_present
       end

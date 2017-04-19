@@ -17,7 +17,7 @@ module Pageflow
           transition 'processing_failed' => 'processing'
         end
 
-        job ProcessImageFileJob do
+        job ProcessFileJob do
           on_enter 'processing'
           result :ok => 'processed'
           result :error => 'processing_failed'
@@ -35,6 +35,10 @@ module Pageflow
 
     def retryable?
       processing_failed?
+    end
+
+    def ready?
+      processed?
     end
   end
 end

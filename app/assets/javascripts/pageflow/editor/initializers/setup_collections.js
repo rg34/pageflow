@@ -4,6 +4,7 @@ pageflow.app.addInitializer(function(options) {
   pageflow.imageFiles = pageflow.files.image_files;
   pageflow.videoFiles = pageflow.files.video_files;
   pageflow.audioFiles = pageflow.files.audio_files;
+  pageflow.textTrackFiles = pageflow.files.text_track_files;
 
   pageflow.pages = new pageflow.PagesCollection(options.pages);
   pageflow.chapters = new pageflow.ChaptersCollection(options.chapters);
@@ -37,4 +38,6 @@ pageflow.app.addInitializer(function(options) {
   pageflow.savingRecords = new pageflow.SavingRecordsCollection();
   pageflow.savingRecords.watch(pageflow.pages);
   pageflow.savingRecords.watch(pageflow.chapters);
+
+  pageflow.events.trigger('seed:loaded');
 });

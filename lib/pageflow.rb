@@ -14,6 +14,10 @@ module Pageflow
         resources :entries do
           resources :memberships
         end
+
+        resources :accounts do
+          resources :memberships
+        end
       end
 
       mount Pageflow::Engine, at: Pageflow.config.mount_point
@@ -28,5 +32,9 @@ module Pageflow
 
   def self.active_admin_load_path
     Dir[Pageflow::Engine.root.join('admins')].first
+  end
+
+  def self.built_in_page_types_plugin
+    BuiltInPageTypesPlugin.new
   end
 end

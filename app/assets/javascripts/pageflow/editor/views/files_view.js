@@ -20,7 +20,9 @@ pageflow.FilesView = Backbone.Marionette.ItemView.extend({
           label: I18n.t('pageflow.editor.views.files_view.reuse'),
           handler: function() {
             pageflow.FilesExplorerView.open({
-              callback: pageflow.entry.addFileUsage.bind(pageflow.entry)
+              callback: function(otherEntry, file) {
+                pageflow.entry.reuseFile(otherEntry, file);
+              }
             });
           }
         }
@@ -36,26 +38,23 @@ pageflow.FilesView = Backbone.Marionette.ItemView.extend({
     });
 
     pageflow.editor.fileTypes.each(function(fileType) {
-      this.tab(fileType);
+      if (fileType.topLevelType) {
+        this.tab(fileType);
+      }
     }, this);
 
     this.$el.append(this.subview(this.tabsView).el);
   },
 
   tab: function(fileType) {
+    var selectionMode = this.options.tabName === fileType.collectionName;
+
     this.tabsView.tab(fileType.collectionName, _.bind(function() {
-      return this.subview(new pageflow.CollectionView({
-        tagName: 'ul',
-        className: 'files expandable',
-        collection: pageflow.entry.getFileCollection(fileType),
-        itemViewConstructor: pageflow.FileItemView,
-        itemViewOptions: {
-          metaDataAttributes: fileType.metaDataAttributes,
-          selectionHandler: this.options.tabName === fileType.collectionName && this.options.selectionHandler
-        },
-        blankSlateViewConstructor: Backbone.Marionette.ItemView.extend({
-          template: 'templates/files_blank_slate'
-        })
+      return this.subview(new pageflow.FilteredFilesView({
+        entry: pageflow.entry,
+        fileType: fileType,
+        selectionHandler: selectionMode && this.options.selectionHandler,
+        filterName: selectionMode && this.options.filterName
       }));
     }, this));
 

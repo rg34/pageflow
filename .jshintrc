@@ -5,13 +5,15 @@
   "trailing": true,
   "maxlen": 100,
   "unused": "vars",
+  "expr": true,
+  "camelcase": false,
   "predef": [
     "jQuery",
     "$",
     "Backbone",
     "Cocktail",
     "_",
-    "vjs",
+    "videojs",
     "Audio5js",
     "I18n",
 
@@ -19,6 +21,18 @@
     "editor",
     
     "confirm",
-    "alert"
+    "alert",
+
+    "chai",
+    "sinon",
+    "support",
+
+    "describe",
+    "it",
+    "before",
+    "after",
+    "beforeEach",
+    "afterEach",
+    "expect"
   ]
 }

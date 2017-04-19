@@ -49,11 +49,15 @@ module Pageflow
       main_storyline ? main_storyline.chapters : Chapter.none
     end
 
-    def files(model)
-      model
-        .select("#{model.table_name}.*, pageflow_file_usages.id AS usage_id")
-        .joins(:usages)
-        .where(pageflow_file_usages: {revision_id: id})
+    def find_files(model)
+      files(model).map do |file|
+        UsedFile.new(file)
+      end
+    end
+
+    def find_file(model, id)
+      file = files(model).find(id)
+      UsedFile.new(file)
     end
 
     def creator
@@ -121,6 +125,13 @@ module Pageflow
     end
 
     private
+
+    def files(model)
+      model
+        .includes(:usages)
+        .references(:pageflow_file_usages)
+        .where(pageflow_file_usages: {revision_id: id})
+    end
 
     def published_until_unchanged
       errors.add(:published_until, :readonly) if published_until_changed?

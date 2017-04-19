@@ -7,9 +7,8 @@ module Pageflow
     describe '#create' do
       it 'creates chapter in storyline' do
         user = create(:user)
-        entry = create(:entry)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
-        create(:membership, :entry => entry, :user => user)
 
         expect do
           sign_in(user)
@@ -21,13 +20,17 @@ module Pageflow
         end.to change { entry.draft.chapters.count }.by(1)
       end
 
-      it 'requires the signed in user to be member of the parent entry' do
+      it 'requires the signed in user to be editor of the parent entry' do
         user = create(:user)
-        entry = create(:entry)
+        account = create(:account, with_previewer: user)
+        entry = create(:entry, account: account)
         storyline = create(:storyline, revision: entry.draft)
 
         sign_in user
-        post(:create, :storyline_id => storyline, :chapter => attributes_for(:valid_chapter), :format => 'json')
+        post(:create,
+             storyline_id: storyline,
+             chapter: attributes_for(:valid_chapter),
+             format: 'json')
 
         expect(response.status).to eq(403)
       end
@@ -36,7 +39,10 @@ module Pageflow
         entry = create(:entry)
         storyline = create(:storyline, revision: entry.draft)
 
-        post(:create, :storyline_id => storyline, :chapter => attributes_for(:valid_chapter), :format => 'json')
+        post(:create,
+             storyline_id: storyline,
+             chapter: attributes_for(:valid_chapter),
+             format: 'json')
 
         expect(response.status).to eq(401)
       end
@@ -45,22 +51,22 @@ module Pageflow
     describe '#scaffold' do
       it 'creates chapter in storyline' do
         user = create(:user)
-        entry = create(:entry, with_member: user)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
 
-        expect {
+        expect do
           sign_in(user)
           acquire_edit_lock(user, entry)
           post(:scaffold,
                storyline_id: storyline,
                chapter: attributes_for(:valid_chapter),
                format: 'json')
-        }.to change { entry.draft.chapters.count }.by(1)
+        end.to change { entry.draft.chapters.count }.by(1)
       end
 
       it 'creates page inside new chapter' do
         user = create(:user)
-        entry = create(:entry, with_member: user)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
 
         sign_in(user)
@@ -75,7 +81,7 @@ module Pageflow
 
       it 'renders chapter and page attributes' do
         user = create(:user)
-        entry = create(:entry, with_member: user)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
 
         sign_in(user)
@@ -89,9 +95,10 @@ module Pageflow
         expect(json_response(path: [:page, :id])).to be_present
       end
 
-      it 'requires the signed in user to be member of the parent entry' do
+      it 'requires the signed in user to be editor of the parent entry' do
         user = create(:user)
-        entry = create(:entry)
+        account = create(:account, with_previewer: user)
+        entry = create(:entry, account: account)
         storyline = create(:storyline, revision: entry.draft)
 
         sign_in user
@@ -119,10 +126,9 @@ module Pageflow
     describe '#update' do
       it 'updates chapter' do
         user = create(:user)
-        entry = create(:entry)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
-        chapter = create(:chapter, :storyline => storyline, :title => 'old')
-        create(:membership, :entry => entry, :user => user)
+        chapter = create(:chapter, storyline: storyline, title: 'old')
 
         sign_in user
         acquire_edit_lock(user, entry)
@@ -134,12 +140,15 @@ module Pageflow
         expect(chapter.reload.title).to eq('new')
       end
 
-      it 'requires the signed in user to be member of the parent entry' do
+      it 'requires the signed in user to be editor of the parent entry' do
         user = create(:user)
-        chapter = create(:chapter)
+        account = create(:account, with_previewer: user)
+        entry = create(:entry, account: account)
+        storyline = create(:storyline, revision: entry.draft)
+        chapter = create(:chapter, storyline: storyline)
 
         sign_in user
-        patch(:update, :id => chapter, :chapter => attributes_for(:valid_chapter), :format => 'json')
+        patch(:update, id: chapter, chapter: attributes_for(:valid_chapter), format: 'json')
 
         expect(response.status).to eq(403)
       end
@@ -147,43 +156,41 @@ module Pageflow
       it 'requires authentication' do
         chapter = create(:chapter)
 
-        patch(:update, :id => chapter, :chapter => attributes_for(:valid_chapter), :format => 'json')
+        patch(:update, id: chapter, chapter: attributes_for(:valid_chapter), format: 'json')
 
         expect(response.status).to eq(401)
       end
     end
 
     describe '#order' do
-      it 'responds with success for signed in member of entry' do
+      it 'responds with success for signed in editor of entry' do
         user = create(:user)
-        entry = create(:entry)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
-        chapters = create_list(:chapter, 2, :storyline => storyline)
-        create(:membership, :entry => entry, :user => user)
+        chapters = create_list(:chapter, 2, storyline: storyline)
 
         sign_in user
         acquire_edit_lock(user, entry)
-        patch(:order,
-              storyline_id: storyline,
-              ids: [chapters.first.id, chapters.last.id],
-              format: 'json')
+        put(:order,
+            storyline_id: storyline,
+            ids: [chapters.first.id, chapters.last.id],
+            format: 'json')
 
         expect(response.status).to eq(204)
       end
 
       it 'updates position of chapters in draft according to order' do
         user = create(:user)
-        entry = create(:entry)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
-        chapters = create_list(:chapter, 2, :storyline => storyline)
-        create(:membership, :entry => entry, :user => user)
+        chapters = create_list(:chapter, 2, storyline: storyline)
 
         sign_in user
         acquire_edit_lock(user, entry)
-        patch(:order,
-              storyline_id: storyline,
-              ids: [chapters.first.id, chapters.last.id],
-              format: 'json')
+        put(:order,
+            storyline_id: storyline,
+            ids: [chapters.first.id, chapters.last.id],
+            format: 'json')
 
         expect(chapters.first.reload.position).to eq(0)
         expect(chapters.last.reload.position).to eq(1)
@@ -191,41 +198,45 @@ module Pageflow
 
       it 'moves chapter from same entry to storyline' do
         user = create(:user)
-        entry = create(:entry, with_member: user)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
         other_storyline = create(:storyline, revision: entry.draft)
         chapter = create(:chapter, storyline: storyline)
 
         sign_in(user)
         acquire_edit_lock(user, entry)
-        patch(:order, storyline_id: other_storyline, ids: [chapter.id])
+        put(:order, storyline_id: other_storyline, ids: [chapter.id])
 
         expect(chapter.reload.storyline).to eq(other_storyline)
       end
 
       it 'cannot move chapter to storyline of other entry' do
         user = create(:user)
-        entry = create(:entry, with_member: user)
-        other_entry = create(:entry, with_member: user)
+        entry = create(:entry, with_editor: user)
+        other_entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
         chapter = create(:chapter, storyline: storyline)
         storyline_of_other_entry = create(:storyline, revision: other_entry.draft)
 
         sign_in(user)
         acquire_edit_lock(user, other_entry)
-        patch(:order, storyline_id: storyline_of_other_entry, ids: [chapter.id])
+        put(:order, storyline_id: storyline_of_other_entry, ids: [chapter.id])
 
         expect(response).to be_not_found
       end
 
-      it 'requires signed in user to be member of the parent entry' do
+      it 'requires signed in user to be editor of the parent entry' do
         user = create(:user)
-        entry = create(:entry)
+        account = create(:account, with_previewer: user)
+        entry = create(:entry, account: account)
         storyline = create(:storyline, revision: entry.draft)
-        chapters = create_list(:chapter, 2, :storyline => storyline)
+        chapters = create_list(:chapter, 2, storyline: storyline)
 
         sign_in user
-        patch(:order, :storyline_id => storyline, :ids => [chapters.first.id, chapters.last.id], :format => 'json')
+        put(:order,
+            storyline_id: storyline,
+            ids: [chapters.first.id, chapters.last.id],
+            format: 'json')
 
         expect(response.status).to eq(403)
       end
@@ -234,7 +245,7 @@ module Pageflow
         storyline = create(:storyline)
         chapter = create(:chapter, storyline: storyline)
 
-        patch(:order, :storyline_id => storyline, :ids => [chapter.id], :format => 'json')
+        put(:order, storyline_id: storyline, ids: [chapter.id], format: 'json')
 
         expect(response.status).to eq(401)
       end
@@ -243,10 +254,9 @@ module Pageflow
     describe '#destroy' do
       it 'destroys chapter' do
         user = create(:user)
-        entry = create(:entry)
+        entry = create(:entry, with_editor: user)
         storyline = create(:storyline, revision: entry.draft)
-        chapter = create(:chapter, :storyline => storyline, :title => 'old')
-        create(:membership, :entry => entry, :user => user)
+        chapter = create(:chapter, storyline: storyline, title: 'old')
 
         sign_in user
         acquire_edit_lock(user, entry)
@@ -255,12 +265,15 @@ module Pageflow
         expect(entry.draft(true)).to have(0).chapters
       end
 
-      it 'requires the signed in user to be member of the parent entry' do
+      it 'requires the signed in user to be editor of the parent entry' do
         user = create(:user)
-        chapter = create(:chapter)
+        account = create(:account, with_previewer: user)
+        entry = create(:entry, account: account)
+        storyline = create(:storyline, revision: entry.draft)
+        chapter = create(:chapter, storyline: storyline)
 
         sign_in user
-        delete(:destroy, :id => chapter, :format => 'json')
+        delete(:destroy, id: chapter, format: 'json')
 
         expect(response.status).to eq(403)
       end
@@ -268,7 +281,7 @@ module Pageflow
       it 'requires authentication' do
         chapter = create(:chapter)
 
-        delete(:destroy, :id => chapter, :format => 'json')
+        delete(:destroy, id: chapter, format: 'json')
 
         expect(response.status).to eq(401)
       end

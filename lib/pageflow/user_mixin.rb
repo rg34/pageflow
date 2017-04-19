@@ -3,42 +3,49 @@ module Pageflow
   module UserMixin
     extend ActiveSupport::Concern
 
-    NON_ADMIN_ROLES = ['editor', 'account_manager']
-    ROLES = NON_ADMIN_ROLES + ['admin']
-
     include Suspendable
 
     included do
-      belongs_to :account, counter_cache: true, class_name: 'Pageflow::Account'
-
+# <<<<<<< HEAD
+#       belongs_to :account, counter_cache: true, class_name: 'Pageflow::Account'
+#
+#       has_many :memberships, dependent: :destroy, class_name: 'Pageflow::Membership', foreign_key: :user_id
+#       has_many :entries, through: :memberships, class_name: 'Pageflow::Entry', foreign_key: :user_id
+# =======
       has_many :memberships, dependent: :destroy, class_name: 'Pageflow::Membership', foreign_key: :user_id
-      has_many :entries, through: :memberships, class_name: 'Pageflow::Entry', foreign_key: :user_id
+      has_many :account_memberships,
+               -> { where(entity_type: 'Pageflow::Account') },
+               class_name: 'Pageflow::Membership'
+      has_many :entries,
+               through: :memberships,
+               class_name: 'Pageflow::Entry',
+               source: :entity,
+               source_type: 'Pageflow::Entry',
+               foreign_key: :user_id
+      has_many :accounts,
+               through: :memberships,
+               class_name: 'Pageflow::Account',
+               source: :entity,
+               source_type: 'Pageflow::Account'
+# >>>>>>> 6241ed7e84ba96c859097d841c148693b9b783fb
 
       has_many :revisions, class_name: 'Pageflow::Revision', foreign_key: :creator_id
 
       validates :first_name, :last_name, presence: true
-      validates :role, inclusion: ROLES
-      validates :account, presence: true
 
-      scope :admins, -> { where(role: 'admin') }
-      scope :account_managers, -> { where(role: 'account_manager') }
-      scope :editors, -> { where(role: 'editor') }
+      scope :admins, -> { where(admin: true) }
     end
 
     def admin?
-      role == 'admin'
-    end
-
-    def account_manager?
-      role == 'account_manager'
+      admin
     end
 
     def full_name
-      [first_name, last_name] * " "
+      [first_name, last_name] * ' '
     end
 
     def formal_name
-      [last_name, first_name] * ", "
+      [last_name, first_name] * ', '
     end
 
     def locale
@@ -60,14 +67,8 @@ module Pageflow
         destroy
         true
       else
-        self.errors.add(:current_password, password.blank? ? :blank : :invalid)
+        errors.add(:current_password, password.blank? ? :blank : :invalid)
         false
-      end
-    end
-
-    module ClassMethods
-      def roles_accessible_by(ability)
-        ability.can?(:read, Account) ? ROLES : NON_ADMIN_ROLES
       end
     end
 

@@ -6,7 +6,7 @@ module Pageflow
     attr_reader :entry, :revision
     attr_accessor :share_target
 
-    delegate(:id,
+    delegate(:id, :slug,
              :account, :theming,
              :enabled_feature_names,
              :to_model, :to_key, :persisted?,
@@ -15,7 +15,7 @@ module Pageflow
 
     delegate(:widgets,
              :storylines, :main_storyline_chapters, :chapters, :pages,
-             :files,
+             :find_files, :find_file,
              :image_files, :video_files, :audio_files,
              :summary, :credits, :manual_start,
              :emphasize_chapter_beginning,

@@ -47,13 +47,18 @@ pageflow.PagePreviewView = Backbone.Marionette.View.extend({
     return this;
   },
 
+  onClose: function() {
+    this.$el.page('cleanup');
+  },
+
   updateTemplate: function() {
     this.$el.page('cleanup');
-
     this.$el.html(this.pageTemplate());
     this.$el.data('template', this.model.get('template'));
 
-    this.$el.page('reinit');
+    setTimeout(_.bind(function() {
+      this.$el.page('reinit');
+    }, this), 0);
   },
 
   update: function() {

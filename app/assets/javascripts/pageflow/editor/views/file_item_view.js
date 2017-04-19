@@ -8,6 +8,7 @@ pageflow.FileItemView = Backbone.Marionette.ItemView.extend({
     fileName: '.file_name',
 
     selectButton: '.select',
+    settingsButton: '.settings',
     removeButton: '.remove',
     confirmButton: '.confirm',
     cancelButton: '.cancel',
@@ -16,7 +17,6 @@ pageflow.FileItemView = Backbone.Marionette.ItemView.extend({
     thumbnail: '.file_thumbnail',
     stageItems: '.file_stage_items',
 
-    rights: 'input.rights',
     metaData: 'tbody.attributes',
     downloads: 'tbody.downloads',
     downloadLink: 'a.original'
@@ -24,9 +24,20 @@ pageflow.FileItemView = Backbone.Marionette.ItemView.extend({
 
   events: {
     'click .select': function() {
-      this.options.selectionHandler.call(this.model);
-      pageflow.editor.navigate(this.options.selectionHandler.getReferer(), {trigger: true});
+      var result = this.options.selectionHandler.call(this.model);
+
+      if (result !== false) {
+        pageflow.editor.navigate(this.options.selectionHandler.getReferer(),
+                                 {trigger: true});
+      }
+
       return false;
+    },
+
+    'click .settings': function() {
+      pageflow.FileSettingsDialogView.open({
+        model: this.model
+      });
     },
 
     'click .cancel': 'cancel',
@@ -37,9 +48,7 @@ pageflow.FileItemView = Backbone.Marionette.ItemView.extend({
 
     'click .retry': 'retry',
 
-    'click .file_thumbnail': 'toggleExpanded',
-
-    'change': 'save'
+    'click .file_thumbnail': 'toggleExpanded'
   },
 
   modelEvents: {
@@ -66,16 +75,18 @@ pageflow.FileItemView = Backbone.Marionette.ItemView.extend({
   },
 
   update: function() {
+    if (this.isClosed) {
+      return;
+    }
+
     this.$el.attr('data-id', this.model.id);
     this.ui.fileName.text(this.model.get('file_name') || '(Unbekannt)');
 
-    this.ui.rights.val(this.model.get('rights'));
-    this.ui.rights.attr('placeholder', pageflow.entry.get('default_file_rights'));
-
     this.ui.downloadLink.attr('href', this.model.get('original_url'));
-    this.ui.downloads.toggle(this.model.isUploaded());
+    this.ui.downloads.toggle(this.model.isUploaded() && !_.isEmpty(this.model.get('original_url')));
 
     this.ui.selectButton.toggle(!!this.options.selectionHandler);
+    this.ui.settingsButton.toggle(!this.model.isNew());
 
     this.ui.cancelButton.toggle(this.model.isUploading());
     this.ui.confirmButton.toggle(this.model.isConfirmable());
@@ -85,20 +96,20 @@ pageflow.FileItemView = Backbone.Marionette.ItemView.extend({
     this.updateToggleTitle();
   },
 
-  save: function() {
-    this.model.save({
-      rights: this.ui.rights.val()
-    });
-  },
-
   metaDataViews: function() {
     var model = this.model;
 
-    return _.map(this.options.metaDataAttributes, function(attribute) {
-      return new pageflow.FileMetaDataItemView({
-        model: model,
-        attribute: attribute
-      });
+    return _.map(this.options.metaDataAttributes, function(options) {
+      if (typeof options === 'string') {
+        options = {
+          name: options,
+          valueView: pageflow.TextFileMetaDataItemValueView
+        };
+      }
+
+      return new pageflow.FileMetaDataItemView(_.extend({
+        model: model
+      }, options));
     });
   },
 
@@ -113,7 +124,7 @@ pageflow.FileItemView = Backbone.Marionette.ItemView.extend({
 
   destroy: function() {
     if (confirm("Datei wirklich wirklich löschen?")) {
-      this.model.destroyUsage();
+      this.model.destroy();
     }
   },
 

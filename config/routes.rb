@@ -9,19 +9,19 @@ Pageflow::Engine.routes.draw do
 
       resources :storylines, only: [:create, :update, :destroy] do
         collection do
-          patch :order
+          put :order
           post :scaffold
         end
 
         resources :chapters, only: [:create, :update, :destroy] do
           collection do
-            patch :order
+            put :order
             post :scaffold
           end
 
           resources :pages, only: [:create, :update, :destroy] do
             collection do
-              patch :order
+              put :order
             end
           end
         end
@@ -34,10 +34,6 @@ Pageflow::Engine.routes.draw do
       resources :entries, :only => :index, :shallow => true do
         get :seed, :on => :member
 
-        resources :files, :path => 'files/:collection_name', :only => [:index, :create, :update] do
-          get :retry, :on => :member
-        end
-
         resources :file_usages, :only => [:create, :destroy]
 
         resources :encoding_confirmations, :only => [:create] do
@@ -46,6 +42,15 @@ Pageflow::Engine.routes.draw do
 
         resources :entry_publications, :only => [:create] do
           post :check, :on => :collection
+        end
+      end
+
+      resources :entries, only: [] do
+        resources :files,
+                  path: 'files/:collection_name',
+                  only: [:index, :create, :update, :destroy] do
+          post :reuse, on: :collection
+          post :retry, on: :member
         end
       end
 
@@ -63,8 +68,11 @@ Pageflow::Engine.routes.draw do
   get ':entry_id/audio/:id', :to => 'files#show', :as => :short_audio_file, :defaults => {:collection_name => 'audio_files'}
 
   resources :entries, :only => [:show]
-  get ':id', :to => 'entries#show', :as => :short_entry
-  get '/', :to => 'entries#index', :as => :public_root
 
-  get ':id/pages/:page_index', :to => 'entries#page'
+  get ':id', to: 'entries#show', as: :short_entry
+  get ':id/embed', to: 'entries#show', defaults: {embed: '1'}, as: :entry_embed
+
+  get '/', to: 'entries#index', as: :public_root
+
+  get ':id/pages/:page_index', to: 'entries#page'
 end

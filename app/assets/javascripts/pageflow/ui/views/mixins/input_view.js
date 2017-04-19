@@ -15,6 +15,7 @@
  *
  * will be used for the label. And the key
  *
+ *     pageflow.ui.inline_help.page.title_html
  *     pageflow.ui.inline_help.page.title
  *
  * will be used for the inline help.
@@ -35,19 +36,22 @@
  *
  * Accordingly, for the inline help:
  *
+ *     some.attributes.title.inline_help_html
  *     some.attributes.title.inline_help
+ *     fallback.attributes.title.inline_help_html
  *     fallback.attributes.title.inline_help
+ *     pageflow.ui.inline_help.post.title_html
  *     pageflow.ui.inline_help.post.title
  *
  * This setup allows to keep all translation keys for an attribute
  * to share a common prefix:
  *
- *    some:
- *      attributes:
- *        title:
- *          label: "Label"
- *          inline_help: "..."
- *          inline_help_disabled: "..."
+ *     some:
+ *       attributes:
+ *         title:
+ *           label: "Label"
+ *           inline_help: "..."
+ *           inline_help_disabled: "..."
  *
  * ### Inline Help for Disabled Inputs
  *
@@ -57,38 +61,50 @@
  * attribute translation key prefixes take precedence over suffixed
  * keys:
  *
+ *     some.attributes.title.inline_help_html
  *     some.attributes.title.inline_help
+ *     some.attributes.title.inline_help_disabled_html
  *     some.attributes.title.inline_help_disabled
+ *     fallback.attributes.title.inline_help_html
  *     fallback.attributes.title.inline_help
+ *     fallback.attributes.title.inline_help_disabled_html
  *     fallback.attributes.title.inline_help_disabled
+ *     pageflow.ui.inline_help.post.title_html
  *     pageflow.ui.inline_help.post.title
+ *     pageflow.ui.inline_help.post.title_disabled_html
  *     pageflow.ui.inline_help.post.title_disabled
  *
- * @option propertyName [String]
+ * @param {string} options
+ *   Common constructor options for all views that include this mixin.
+ *
+ * @param {string} options.propertyName
  *   Name of the attribute on the model to display and edit.
  *
- * @option label [String]
+ * @param {string} [options.label]
  *   Label text for the input.
  *
- * @option attributeTranslationKeyPrefixes [Array<String>]
+ * @param {string[]} [options.attributeTranslationKeyPrefixes]
  *   An array of prefixes to lookup translations for labels and
  *   inline help texts based on attribute names.
  *
- * @option disabled [Boolean]
+ * @param {boolean} [options.disabled]
  *   Render input as disabled.
  *
- * @option visibleBinding [String]
+ * @param {string} [options.visibleBinding]
  *   Name of an attribute to control whether the input is visible. If
  *   the `visible` and `visibleBindingValue` options are not set,
- *   input will be visible whenever this attribute as a truthy value.
+ *   input will be visible whenever this attribute has a truthy value.
  *
- * @option visible [Function|Boolean]
+ * @param {function|boolean} [options.visible]
  *   A Function taking the value of the `visibleBinding` attribute as
  *   parameter. Input will be visible only if function returns `true`.
  *
- * @option visibleBindingValue [Any]
+ * @param {any} [options.visibleBindingValue]
  *   Input will be visible whenever the value of the `visibleBinding`
  *   attribute equals the value of this option.
+ *
+ * @mixin
+ * @memberof module:pageflow/ui
  */
 pageflow.inputView = {
   ui: {
@@ -97,44 +113,47 @@ pageflow.inputView = {
   },
 
   /**
-   * Returns an array of translation keys based on the propertyName
-   * options and the given prefixes.
+   * Returns an array of translation keys based on the
+   * `attributeTranslationKeyPrefixes` option and the given keyName.
    *
-   * @param keyName [String]
-   *   Suffix to append to prefixes.
+   * Combined with {@link
+   * module:pageflow/ui.pageflow.i18nUtils.findTranslation
+   * i18nUtils.findTranslation}, this can be used inside input views
+   * to obtain additional translations with the same logic as for
+   * labels and inline help texts.
    *
-   * @option attributeTranslationKeyPrefixes [Array<String>]
-   *   An array of strings to use as prefixes to constructs
-   *   translation keys.
+   *      pageflow.i18nUtils.findTranslation(this.attributeTranslationKeys('default_value'));
    *
-   * @option fallbackPrefix [String]
+   * @param {string} keyName
+   * Suffix to append to prefixes.
+   *
+   * @param {string} [options.fallbackPrefix]
    *   Optional additional prefix to form a model based translation
    *   key of the form `prefix.modelI18nKey.propertyName.keyName
    *
-   * @api edge
+   * @return {string[]}
+   * @since 0.9
+   * @member
    */
   attributeTranslationKeys: function(keyName, options) {
-    var result = [];
-
-    if (this.options.attributeTranslationKeyPrefixes) {
-      result = result.concat(_(this.options.attributeTranslationKeyPrefixes).map(function(prefix) {
-        return prefix + '.' + this.options.propertyName + '.' + keyName;
-      }, this));
-    }
-
-    if (options && options.fallbackPrefix) {
-      result.push(options.fallbackPrefix + '.' + this.model.i18nKey + '.' + this.options.propertyName);
-    }
-
-    return result;
+    return pageflow.i18nUtils.attributeTranslationKeys(
+      this.options.propertyName,
+      keyName,
+      _.extend({
+        prefixes: this.options.attributeTranslationKeyPrefixes,
+        fallbackModelI18nKey: this.model.i18nKey
+      }, options || {})
+    );
   },
 
-  /** @private */
   onRender: function() {
+    this.$el.addClass('input');
     this.$el.addClass(this.model.modelName + '_' + this.options.propertyName);
-    this.ui.labelText.text(this.labelText());
 
-    this.ui.inlineHelp.text(this.inlineHelpText());
+    this.$el.data('inputPropertyName', this.options.propertyName);
+
+    this.ui.labelText.text(this.labelText());
+    this.ui.inlineHelp.html(this.inlineHelpText());
 
     if (!this.inlineHelpText()) {
       this.ui.inlineHelp.hide();
@@ -144,32 +163,42 @@ pageflow.inputView = {
     this.setupVisibleBinding();
   },
 
+  /**
+   * The label to display in the form.
+   * @return {string}
+   */
   labelText: function() {
     return this.options.label || this.localizedAttributeName();
   },
 
   localizedAttributeName: function() {
-    return pageflow.i18nUtils.findTranslation(this.attributeTranslationKeys('label', {fallbackPrefix: 'activerecord.attributes'}));
+    return pageflow.i18nUtils.findTranslation(this.attributeTranslationKeys('label', {
+      fallbackPrefix: 'activerecord.attributes'
+    }));
   },
 
+  /**
+   * The inline help text for the form field.
+   * @return {string}
+   */
   inlineHelpText: function() {
-    var keys = this.attributeTranslationKeys('inline_help', {fallbackPrefix: 'pageflow.ui.inline_help'});
+    var keys = this.attributeTranslationKeys('inline_help', {
+      fallbackPrefix: 'pageflow.ui.inline_help'
+    });
 
     if (this.options.disabled) {
       keys = pageflow.i18nUtils.translationKeysWithSuffix(keys, 'disabled');
     }
 
-    return pageflow.i18nUtils.findTranslation(keys, {defaultValue: ''});
+    return pageflow.i18nUtils.findTranslation(keys, {defaultValue: '', html: true});
   },
 
-  /** @private */
   updateDisabled: function() {
     if (this.ui.input) {
       this.updateDisabledAttribute(this.ui.input);
     }
   },
 
-  /** @private */
   updateDisabledAttribute: function(element) {
     if (this.options.disabled) {
       element.attr('disabled', true);
@@ -179,7 +208,6 @@ pageflow.inputView = {
     }
   },
 
-  /** @private */
   setupVisibleBinding: function() {
     var view = this;
 

@@ -18,11 +18,13 @@ pageflow.AdjacentPreparer = pageflow.Object.extend({
 
   prepareAdjacent: function(page) {
     var adjacentPages = this.adjacentPages.of(page);
-    var noLongerAdjacentPages = _.difference(this.lastAdjacentPages, adjacentPages, [page]);
-    var newAdjacentPages = _.difference(adjacentPages, this.lastAdjacentPages);
+    var noLongerPreparedPages = _.difference(this.lastPreparedPages, adjacentPages, [page]);
+    var newAdjacentPages = _.difference(adjacentPages, this.lastPreparedPages);
 
-    _(noLongerAdjacentPages).each(function(page) {
-      page.unprepare();
+    _(noLongerPreparedPages).each(function(page) {
+      if (!page.isDestroyed) {
+        page.unprepare();
+      }
     });
 
     _(newAdjacentPages).each(function(adjacentPage) {
@@ -30,7 +32,7 @@ pageflow.AdjacentPreparer = pageflow.Object.extend({
       adjacentPage.preload();
     });
 
-    this.lastAdjacentPages = adjacentPages;
+    this.lastPreparedPages = adjacentPages.concat([page]);
   }
 });
 

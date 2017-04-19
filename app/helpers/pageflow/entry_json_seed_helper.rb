@@ -7,17 +7,8 @@ module Pageflow
     include CommonEntrySeedHelper
 
     def entry_json_seed(entry)
-      sanitize_json(entry_seed(entry).to_json).html_safe
-    end
-
-    def entry_seed(entry)
-      common_entry_seed(entry).merge(
-        theming: entry_theming_seed(entry),
-        storyline_configurations: entry_storyline_configurations_seed(entry),
-        chapters: entry_chapters_seed(entry),
-        pages: entry_pages_seed(entry),
-        file_ids: entry_file_ids_seed(entry)
-      )
+      sanitize_json(render_json_partial('pageflow/entry_json_seed/entry',
+                                        entry: entry)).html_safe
     end
 
     def entry_theming_seed(entry)
@@ -28,10 +19,9 @@ module Pageflow
       }
     end
 
-    def entry_storyline_configurations_seed(entry)
-      entry.storylines.each_with_object({}) do |storyline, result|
-        result[storyline.id] = storyline.configuration
-      end
+    def entry_storylines_seed(entry)
+      attributes = [:id, :configuration]
+      entry.storylines.as_json(only: attributes)
     end
 
     def entry_chapters_seed(entry)
@@ -46,7 +36,7 @@ module Pageflow
 
     def entry_file_ids_seed(entry)
       Pageflow.config.file_types.with_thumbnail_support.each_with_object({}) do |file_type, result|
-        result[file_type.collection_name] = entry.files(file_type.model).map(&:id)
+        result[file_type.collection_name] = entry.find_files(file_type.model).map(&:id)
       end
     end
 

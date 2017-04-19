@@ -18,8 +18,8 @@ module Pageflow
     has_many :chapters, -> { order('pageflow_chapters.position ASC') }, :through => :revisions
     has_many :pages, -> { order('pageflow_chapters.position ASC, pageflow_pages.position ASC') }, :through => :chapters
 
-    has_many :memberships, :dependent => :destroy
-    has_many :users, through: :memberships, class_name: "::#{Pageflow.config.user_class}", foreign_key: :user_id
+    has_many :memberships, as: :entity, dependent: :destroy
+    has_many :users, :through => :memberships, class_name: "::#{Pageflow.config.user_class}", foreign_key: :user_id
 
     has_many :image_files
     has_many :video_files
@@ -33,6 +33,7 @@ module Pageflow
     has_secure_password validations: false
 
     validates :account, :theming, :presence => true
+    validates :title, presence: true
     validate :folder_belongs_to_same_account
 
     scope :editing, -> { joins(:edit_lock).merge(Pageflow::EditLock.active) }

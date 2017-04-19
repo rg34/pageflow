@@ -1,4 +1,12 @@
-pageflow.ReferenceInputView = Backbone.Marionette.ItemView.extend({
+/**
+ * Base class for input views that reference models.
+ *
+ * @class
+ * @memberof module:pageflow/editor
+ */
+pageflow.ReferenceInputView = Backbone.Marionette.ItemView.extend(
+/** @lends module:pageflow/editor.pageflow.ReferenceInputView# */{
+
   mixins: [pageflow.inputView],
 
   template: 'pageflow/editor/templates/inputs/reference',
@@ -6,7 +14,8 @@ pageflow.ReferenceInputView = Backbone.Marionette.ItemView.extend({
 
   ui: {
     title: '.title',
-    unsetButton: '.unset'
+    unsetButton: '.unset',
+    buttons: 'button'
   },
 
   events: {
@@ -54,6 +63,8 @@ pageflow.ReferenceInputView = Backbone.Marionette.ItemView.extend({
 
     this.ui.title.text(target ? target.title() : I18n.t('pageflow.editor.views.inputs.reference_input_view.none'));
     this.ui.unsetButton.toggle(!!target);
+
+    this.updateDisabledAttribute(this.ui.buttons);
 
     if (this.thumbnailView) {
       this.thumbnailView.close();

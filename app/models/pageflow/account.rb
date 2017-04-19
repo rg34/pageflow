@@ -2,10 +2,11 @@ module Pageflow
   class Account < ActiveRecord::Base
     include FeatureTarget
 
-    has_many :users, dependent: :restrict_with_exception, class_name: Pageflow.config.user_class
-
     has_many :entries, dependent: :restrict_with_exception
     has_many :folders, dependent: :destroy
+    has_many :memberships, as: :entity, dependent: :restrict_with_exception
+    has_many :users, through: :memberships, source: :user, class_name: Pageflow.config.user_class
+    has_many :entry_memberships, through: :entries, source: :memberships
 
     has_many :themings, dependent: :destroy
     belongs_to :default_theming, :class_name => 'Theming'

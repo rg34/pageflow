@@ -19,6 +19,7 @@ pageflow.Entry = Backbone.Model.extend({
     this.configuration.parent = this;
 
     this.files = options.files || pageflow.files;
+    this.fileTypes = options.fileTypes || pageflow.editor.fileTypes;
     this.storylines = options.storylines || pageflow.storylines;
     this.storylines.parentModel = this;
     this.chapters = options.chapters || pageflow.chapters;
@@ -29,7 +30,7 @@ pageflow.Entry = Backbone.Model.extend({
     this.videoFiles = pageflow.videoFiles;
     this.audioFiles = pageflow.audioFiles;
 
-    pageflow.editor.fileTypes.each(function(fileType) {
+    this.fileTypes.each(function(fileType) {
       this.watchFileCollection(fileType.collectionName, this.getFileCollection(fileType));
     }, this);
 
@@ -85,29 +86,17 @@ pageflow.Entry = Backbone.Model.extend({
     return this.scaffoldStoryline(_.extend({depth: 'page'}, options)).page;
   },
 
-  addFileUpload: function(upload) {
-    var fileType = pageflow.editor.fileTypes.findByUpload(upload);
-    var file = new fileType.model({
-      state: 'uploading',
-      file_name: upload.name
+  reuseFile: function(otherEntry, file) {
+    var entry = this;
+
+    pageflow.FileReuse.submit(otherEntry, file, {
+      entry: entry,
+
+      success: function(model, response) {
+        entry._setFiles(response, {merge: false, remove: false});
+        entry.trigger('use:files');
+      }
     });
-
-    this.getFileCollection(fileType).add(file);
-
-    return file;
-  },
-
-  addFileUsage: function(file) {
-    var fileUsages = new pageflow.FileUsagesCollection([], {
-      entry: this
-    });
-
-    fileUsages.createForFile(file, { success: function(usage) {
-      file.set('usage_id', usage.get('id'));
-      this.getFileCollection(file.fileType()).add(file);
-
-      this.trigger('use:file', file);
-    }.bind(this)});
   },
 
   getFileCollection: function(fileType) {
@@ -125,14 +114,33 @@ pageflow.Entry = Backbone.Model.extend({
   parse: function(response, options) {
     if (response) {
       this.set(_.pick(response, 'published', 'published_until', 'password_protected'));
-
-      pageflow.editor.fileTypes.each(function(fileType) {
-        this.getFileCollection(fileType).set(response[fileType.collectionName], {add: false, remove: false});
-        delete response[fileType.collectionName];
-      }, this);
+      this._setFiles(response, {
+        add: false,
+        remove: false,
+        applyConfigurationUpdaters: true
+      });
     }
 
     return response;
+  },
+
+  _setFiles: function(response, options) {
+    this.fileTypes.each(function(fileType) {
+      var filesAttributes = response[fileType.collectionName];
+
+      // Temporary solution until rights attributes is moved to
+      // configuration hash. If we are polling, prevent overwriting
+      // the rights attribute.
+      if (options.merge !== false) {
+        filesAttributes = _.map(filesAttributes, function(fileAttributes) {
+          return _.omit(fileAttributes, 'rights');
+        });
+      }
+
+      this.getFileCollection(fileType).set(filesAttributes,
+                                           _.extend({fileType: fileType}, options));
+      delete response[fileType.collectionName];
+    }, this);
   },
 
   toJSON: function() {

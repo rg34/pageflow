@@ -1,14 +1,31 @@
 describe('FileTypes', function() {
   describe('#register/#setup', function() {
-    it('creates file types for given server side configs from registered client side configs', function() {
-      var fileTypes = new pageflow.FileTypes();
+    it('creates file types for given server side configs from registered client side configs',
+       function() {
+         var fileTypes = new pageflow.FileTypes();
 
-      fileTypes.register('image_files', {model: pageflow.ImageFile, matchUpload: /^image/});
-      fileTypes.setup([{collectionName: 'image_files'}]);
+         fileTypes.register('image_files', {model: pageflow.ImageFile, matchUpload: /^image/});
+         fileTypes.setup([{collectionName: 'image_files'}]);
 
-      expect(fileTypes.first().collectionName).to.eq('image_files');
-      expect(fileTypes.first().model).to.eq(pageflow.ImageFile);
-    });
+         expect(fileTypes.first().collectionName).to.eq('image_files');
+         expect(fileTypes.first().model).to.eq(pageflow.ImageFile);
+       });
+
+    it('creates nested file types for given server side configs from registered ' +
+       'client side configs', function() {
+         var fileTypes = new pageflow.FileTypes();
+
+         fileTypes.register('video_files', {model: pageflow.VideoFile, matchUpload: /^video/});
+         fileTypes.register('text_track_files',
+                            {model: pageflow.TextTrackFile, matchUpload: /^text_track/});
+         fileTypes.setup([{collectionName: 'video_files',
+                           nestedFileTypes: [{collectionName: 'text_track_files'}]},
+                          {collectionName: 'text_track_files'}]);
+
+         var nestedFileType = fileTypes.findByCollectionName('video_files').nestedFileTypes.first();
+         expect(nestedFileType.collectionName).to.eq('text_track_files');
+         expect(nestedFileType.model).to.eq(pageflow.TextTrackFile);
+       });
 
     it('throws exception if client side config is missing', function() {
       var fileTypes = new pageflow.FileTypes();
@@ -19,97 +36,102 @@ describe('FileTypes', function() {
     });
   });
 
-  describe('#findByUpload', function() {
-    it('returns first FileType whose matchUpload method returns true', function() {
+  describe('#modify', function() {
+    it('allows adding additional configurationEditorInputs', function() {
       var fileTypes = new pageflow.FileTypes();
-      var upload = {type: 'video/mp4'};
 
       fileTypes.register('image_files', {
         model: pageflow.ImageFile,
-        matchUpload: function(upload) {
-          return upload.type.match(/^image/);
-        }
+        matchUpload: /^image/,
+        configurationEditorInputs: [
+          {
+            name: 'custom_field',
+            input: pageflow.TextInputView
+          }
+        ]
       });
-      fileTypes.register('video_files', {
-        model: pageflow.VideoFile,
-        matchUpload: function(upload) {
-          return upload.type.match(/^video/);
-        }
+      fileTypes.modify('image_files', {
+        configurationEditorInputs: [
+          {
+            name: 'other_field',
+            input: pageflow.TextInputView
+          }
+        ]
       });
-      fileTypes.setup([
-        {collectionName: 'image_files'},
-        {collectionName: 'video_files'}
-      ]);
 
-      var result = fileTypes.findByUpload(upload);
+      fileTypes.setup([{collectionName: 'image_files'}]);
+      var inputNames = _(fileTypes.first().configurationEditorInputs).pluck('name');
 
-      expect(result.collectionName).to.eq('video_files');
+      expect(inputNames).to.eql(['custom_field', 'other_field']);
     });
 
-    it('returns first FileType whose uploadType matches type of upload', function() {
+    it('allows adding additional configurationUpdaters', function() {
       var fileTypes = new pageflow.FileTypes();
-      var upload = {type: 'video/mp4'};
+      var updater1 = function() {};
+      var updater2 = function() {};
 
       fileTypes.register('image_files', {
         model: pageflow.ImageFile,
-        matchUpload: /^image/
+        matchUpload: /^image/,
+        configurationUpdaters: [updater1]
       });
-      fileTypes.register('video_files', {
-        model: pageflow.VideoFile,
-        matchUpload: /^video/
+      fileTypes.modify('image_files', {
+        configurationUpdaters: [updater2]
       });
-      fileTypes.setup([
-        {collectionName: 'image_files'},
-        {collectionName: 'video_files'}
-      ]);
 
-      var result = fileTypes.findByUpload(upload);
+      fileTypes.setup([{collectionName: 'image_files'}]);
 
-      expect(result.collectionName).to.eq('video_files');
+      expect(fileTypes.first().configurationUpdaters).to.eql([updater1, updater2]);
     });
 
-    it('throws exception if no file type matches', function() {
+    it('allows adding additional confirmUploadTableColumns', function() {
       var fileTypes = new pageflow.FileTypes();
-      var upload = {type: 'video/mp4'};
 
-      fileTypes.setup([]);
+      fileTypes.register('image_files', {
+        model: pageflow.ImageFile,
+        matchUpload: /^image/,
+        confirmUploadTableColumns: [
+          {
+            name: 'custom_field',
+            cellView: pageflow.TextTableCellView
+          }
+        ]
+      });
+      fileTypes.modify('image_files', {
+        confirmUploadTableColumns: [
+          {
+            name: 'other_field',
+            cellView: pageflow.TextTableCellView
+          }
+        ]
+      });
+
+      fileTypes.setup([{collectionName: 'image_files'}]);
+      var columnNames = _(fileTypes.first().confirmUploadTableColumns).pluck('name');
+
+      expect(columnNames).to.eql(['custom_field', 'other_field']);
+    });
+
+    it('throws error when trying to modify unsupported property', function() {
+      var fileTypes = new pageflow.FileTypes();
+
+      fileTypes.register('image_files', {
+        model: pageflow.ImageFile,
+        matchUpload: /^image/,
+        confirmUploadTableColumns: [
+          {
+            name: 'custom_field',
+            cellView: pageflow.TextTableCellView
+          }
+        ]
+      });
+      fileTypes.modify('image_files', {
+        somethingElse: [{}]
+      });
 
       expect(function() {
-        fileTypes.findByUpload(upload);
-      }).to.throw(pageflow.FileTypes.UnmatchedUploadError);
-    });
-  });
-
-  describe('#findByCollectionName', function() {
-    it('returns file type with given collection name', function() {
-      var fileTypes = new pageflow.FileTypes();
-
-      fileTypes.register('image_files', {
-        model: pageflow.ImageFile,
-        matchUpload: /^image/
-      });
-      fileTypes.register('video_files', {
-        model: pageflow.VideoFile,
-        matchUpload: /^video/
-      });
-      fileTypes.setup([
-        {collectionName: 'image_files'},
-        {collectionName: 'video_files'}
-      ]);
-
-      var result = fileTypes.findByCollectionName('video_files');
-
-      expect(result.collectionName).to.eq('video_files');
-    });
-
-    it('throws exception if no file type with collection name exists', function() {
-      var fileTypes = new pageflow.FileTypes();
-
-      fileTypes.setup([]);
-
-      expect(function() {
-        fileTypes.findByCollectionName('video_files');
-      }).to.throw('Could not find file type');
+        fileTypes.setup([{collectionName: 'image_files'}]);
+      }).to.throw(/Given in modification for image_files: somethingElse/);
     });
   });
 });

@@ -179,6 +179,11 @@ module Pageflow
     #     end
     attr_accessor :public_entry_url_options
 
+    # Either a lambda or an object with a `call` method taking a
+    # {Theming} as paramater and returing a hash of options used to
+    # construct the embed url of a published entry.
+    attr_accessor :entry_embed_url_options
+
     # Submit video/audio encoding jobs only after the user has
     # explicitly confirmed in the editor. Defaults to false.
     attr_accessor :confirm_encoding_jobs
@@ -244,7 +249,7 @@ module Pageflow
     #
     #     config.authorize_user_deletion =
     #       lambda do |user_to_delete|
-    #         if user_to_delete.account.users.length > 1
+    #         if user_to_delete.accounts.all? { |account| account.users.size > 1 }
     #           true
     #         else
     #           'Last user on account. Permission denied'
@@ -252,6 +257,10 @@ module Pageflow
     #       end
     # @since 0.11
     attr_accessor :authorize_user_deletion
+
+    # Array of values that the `kind` attribute on text tracks can
+    # take. Defaults to `[:captions, :subtitles, :descriptions]`.
+    attr_reader :available_text_track_kinds
 
     def initialize
       @paperclip_filesystem_default_options = {validate_media_type: false}
@@ -276,6 +285,7 @@ module Pageflow
       @theming_request_scope = CnameThemingRequestScope.new
       @public_entry_request_scope = lambda { |entries, request| entries }
       @public_entry_url_options = Pageflow::ThemingsHelper::DEFAULT_PUBLIC_ENTRY_OPTIONS
+      @entry_embed_url_options = {protocol: 'https'}
 
       @confirm_encoding_jobs = false
 
@@ -292,6 +302,8 @@ module Pageflow
       @default_publisher_meta_tag = 'Pageflow'
 
       @authorize_user_deletion = lambda { |_user| true }
+
+      @available_text_track_kinds = [:captions, :subtitles, :descriptions]
     end
 
     # Activate a plugin.

@@ -3,14 +3,9 @@ Pageflow.configure do |config|
   # users.
   config.mailer_sender = 'change-me-at-config-initializers-pageflow@example.com'
 
-  # Page types available in the editor. Add futher page types from
-  # page type engines below.
-  config.page_types.register(Pageflow::BuiltInPageType.background_image)
-  config.page_types.register(Pageflow::BuiltInPageType.background_video)
-  config.page_types.register(Pageflow::BuiltInPageType.video)
-  config.page_types.register(Pageflow::BuiltInPageType.audio)
-  config.page_types.register(Pageflow::BuiltInPageType.audio_loop)
-  # config.page_types.register(Pageflow::Rainbow::PageType.new)
+  # Plugins provide page types and widget types.
+  config.plugin(Pageflow.built_in_page_types_plugin)
+  # config.plugin(Pageflow::Rainbow.plugin)
 
   # Add custom themes by invoking the pageflow:theme generator and
   # registering the theme here.
@@ -53,25 +48,33 @@ Pageflow.configure do |config|
   # use s3 storage. All options allowed in paperclip has_attached_file
   # calls are allowed.
   config.paperclip_s3_default_options.merge!(
-    :s3_credentials => {
-      :bucket => ENV.fetch('S3_BUCKET', 'com-example-pageflow-development'),
-      :access_key_id => ENV.fetch('S3_ACCESS_KEY', 'xxx'),
-      :secret_access_key => ENV.fetch('S3_SECRET_KEY', 'xxx'),
-      :s3_host_name => ENV.fetch('S3_HOST_NAME', 's3-eu-west-1.amazonaws.com')
+    s3_credentials: {
+      bucket: ENV.fetch('S3_BUCKET', 'com-example-pageflow-development'),
+      access_key_id: ENV.fetch('S3_ACCESS_KEY', 'xxx'),
+      secret_access_key: ENV.fetch('S3_SECRET_KEY', 'xxx'),
+      s3_host_name: ENV.fetch('S3_HOST_NAME', 's3-eu-west-1.amazonaws.com')
     },
-    :s3_host_alias => ENV.fetch('S3_HOST_ALIAS', 'com-example-pageflow.s3-website-eu-west-1.amazonaws.com'),
-    :s3_protocol => ENV.fetch('S3_PROTOCOL', 'http')
+    s3_host_alias: ENV.fetch('S3_HOST_ALIAS',
+                             'com-example-pageflow.s3-website-eu-west-1.amazonaws.com'),
+    s3_protocol: ENV.fetch('S3_PROTOCOL', 'http')
   )
 
   # Default options for paperclip attachments which are supposed to
   # use filesystem storage. All options allowed in paperclip has_attached_file
   # calls are allowed.
   config.zencoder_options.merge!(
-    :api_key => ENV.fetch('ZENCODER_API_KEY', 'xxx'),
-    :output_bucket => ENV.fetch('S3_OUTPUT_BUCKET', 'com-example-pageflow-out'),
-    :s3_host_alias => ENV.fetch('S3_OUTPUT_HOST_ALIAS', 'com-example-pageflow-out.s3-website-eu-west-1.amazonaws.com'),
-    :s3_protocol => ENV.fetch('S3_PROTOCOL','http'),
-    :attachments_version => 'v1'
+    api_key: ENV.fetch('ZENCODER_API_KEY', 'xxx'),
+    output_bucket: ENV.fetch('S3_OUTPUT_BUCKET', 'com-example-pageflow-out'),
+    s3_host_alias: ENV.fetch('S3_OUTPUT_HOST_ALIAS',
+                             'com-example-pageflow-out.s3-website-eu-west-1.amazonaws.com'),
+    s3_protocol: ENV.fetch('S3_PROTOCOL', 'http'),
+    attachments_version: 'v1',
+
+    # Zencoder can generate SMIL files which can be used to have
+    # Akamai generate HLS-playlists. By default, Pageflow makes
+    # Zencoder generate HLS-playlists. To prevent hitting Zencoder's
+    # 20 outputs limit, we disable smil outputs.
+    skip_smil: true
   )
 
   # Specify default meta tags to use in published stories.

@@ -2,7 +2,6 @@ pageflow.UploaderView = Backbone.Marionette.View.extend({
   el: 'form#upload',
 
   ui: {
-    input: 'input#image_file_attachment',
     authToken: 'input[name="authenticity_token"]'
   },
 
@@ -16,20 +15,24 @@ pageflow.UploaderView = Backbone.Marionette.View.extend({
     this.bindUIElements();
 
     this.$el.fileupload({
-      acceptFileTypes: /(\.|\/)(bmp|gif|jpe?g|png|ti?f|wmv|mp4|mpg|mov|asf|asx|avi|m?v|mpeg|qt|3g2|3gp|3ivx|divx|3vx|vob|flv|dvx|xvid|mkv)$/i,
+      acceptFileTypes: new RegExp ('(\\.|\\/)(bmp|gif|jpe?g|png|ti?f|wmv|mp4|mpg|mov|asf|asx|avi|' +
+                                   'm?v|mpeg|qt|3g2|3gp|3ivx|divx|3vx|vob|flv|dvx|xvid|mkv|vtt)$',
+                                   'i'),
       dataType: 'json',
 
       add: function(event, data) {
         try {
-          data.record = pageflow.entry.addFileUpload(data.files[0]);
-          var xhr = data.submit();
+          pageflow.fileUploader.add(data.files[0]).then(function(record) {
+            data.record = record;
+            var xhr = data.submit();
 
-          that.listenTo(data.record, 'uploadCancelled', function() {
-            xhr.abort();
+            that.listenTo(data.record, 'uploadCancelled', function() {
+              xhr.abort();
+            });
           });
         }
         catch(e) {
-          if (e instanceof pageflow.FileTypes.UnmatchedUploadError) {
+          if (e instanceof pageflow.UploadError) {
             pageflow.app.trigger('error', e);
           }
           else {
@@ -48,9 +51,9 @@ pageflow.UploaderView = Backbone.Marionette.View.extend({
         this.action = record.url();
 
         data.paramName = record.modelName + '[attachment]';
-        data.formData = {
+        data.formData = _.extend({
           authenticity_token: that.ui.authToken.attr('value')
-        };
+        }, pageflow.formDataUtils.fromModel(record));
       },
 
       done: function(event, data) {

@@ -54,17 +54,11 @@ Gem::Specification.new do |s|
   # Markdown parser
   s.add_dependency 'kramdown', '~> 1.5'
 
-  # Markdown parser
-  s.add_dependency 'htmlentities', '~> 4.3'
+  # Convert srt files to vtt
+  s.add_dependency 'webvtt-ruby', '~> 0.3.2'
 
-  # Video tag handling
-  #
-  # WARNING: CSS from the video.js repository has been copied to
-  # pageflow/themes/default/video_player/vjs_base.scss. It needs to be
-  # kept in sync when this dependency is updated. Moreover,
-  # pageflow/video_player/play_button_patch.js might depend on
-  # video.js implementation details.
-  s.add_dependency 'videojs_rails', '4.1.0'
+  # Decode strings with HTML entities
+  s.add_dependency 'htmlentities', '~> 4.3'
 
   # Use jquery as the JavaScript library
   s.add_dependency 'jquery-rails', '~> 3.0'
@@ -85,6 +79,9 @@ Gem::Specification.new do |s|
 
   # Further helpers and conventions on top of Backbone
   s.add_dependency 'marionette-rails', '~> 1.1.0'
+
+  # React.js assets and server side rendering helpers
+  s.add_dependency 'react-rails', '~> 1.8'
 
   # Templating engine used to render jst tempaltes.
   s.add_dependency 'ejs', '~> 1.1'
@@ -138,6 +135,9 @@ Gem::Specification.new do |s|
 
   # Fixture replacement
   s.add_development_dependency 'factory_girl_rails', '~> 4.5'
+
+  # Matchers for Pundit policies
+  s.add_development_dependency 'pundit-matchers', '~> 1.0'
 
   # Clean database in integration tests
   s.add_development_dependency 'database_cleaner', '~> 1.2'
